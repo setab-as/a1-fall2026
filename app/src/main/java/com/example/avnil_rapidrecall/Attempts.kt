@@ -1,8 +1,5 @@
 package com.example.avnil_rapidrecall
 
-import android.R.id.input
-import java.time.LocalDateTime
-
 class Attempts(
     val answer: String,
     val guess: String,
