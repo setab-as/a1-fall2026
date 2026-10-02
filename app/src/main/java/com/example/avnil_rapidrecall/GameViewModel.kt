@@ -41,12 +41,14 @@ class GameViewModel : ViewModel() {
                 onscreenDigit = ""
                 delay(300.milliseconds)
             }
-            state = GameState.Input // and then once its done showing the numbers, go to the input state of the game
+            state =
+                GameState.Input // and then once its done showing the numbers, go to the input state of the game
         }
     }
 
     fun filterGuess(text: String) {
-        input = text.filter {it.isDigit()}.take(answer.length) // make sure its only digits and not longer than our answer
+        input = text.filter { it.isDigit() }
+            .take(answer.length) // make sure its only digits and not longer than our answer
     }
 
     fun submit() { // check attempt, log attempt and then set the stage to result

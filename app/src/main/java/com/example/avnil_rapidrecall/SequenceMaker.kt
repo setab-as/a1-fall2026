@@ -1,4 +1,5 @@
 package com.example.avnil_rapidrecall
+
 import kotlin.random.Random
 
 class SequenceMaker {

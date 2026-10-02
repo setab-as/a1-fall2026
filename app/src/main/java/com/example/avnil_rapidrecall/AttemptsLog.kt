@@ -6,7 +6,9 @@ class AttemptsLog {
         attempts.add(attempt)
     }
 
-    fun getAttempts(): List<Attempts> = attempts.reversed() // reversed so that the most recent attempts are at the top
+    fun getAttempts(): List<Attempts> =
+        attempts.reversed() // reversed so that the most recent attempts are at the top
+
     fun totalAttempts(): Int = attempts.size // total number of attempts
     fun correctAttempts(): Int = attempts.count { it.isAnswer } // number of correct attempts
 
