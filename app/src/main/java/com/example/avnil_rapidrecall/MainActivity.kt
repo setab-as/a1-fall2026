@@ -48,7 +48,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.input.KeyboardType
 
 class MainActivity : ComponentActivity() {
-
     private val game: GameViewModel by viewModels()
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -98,25 +97,35 @@ fun StartScreen(goTo: (String) -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("RapidRecall",
+        Text(
+            "RapidRecall",
             fontSize = 42.sp,
-            fontWeight = FontWeight.SemiBold)
-        Text("Memory Game App",
-            modifier = Modifier.padding(bottom = 32.dp),)
+            fontWeight = FontWeight.SemiBold
+        )
+        Text(
+            "Memory Game App",
+            modifier = Modifier.padding(bottom = 32.dp),
+        )
         Button(
-            modifier = Modifier.fillMaxWidth(0.6f).padding(8.dp),
+            modifier = Modifier
+                .fillMaxWidth(0.6f)
+                .padding(8.dp),
             onClick = { goTo("game") }
         ) {
             Text("Start", fontSize = 22.sp)
         }
         Button(
-            modifier = Modifier.fillMaxWidth(0.6f).padding(8.dp),
+            modifier = Modifier
+                .fillMaxWidth(0.6f)
+                .padding(8.dp),
             onClick = { goTo("log") }
         ) {
             Text("Log", fontSize = 22.sp)
         }
         Button(
-            modifier = Modifier.fillMaxWidth(0.6f).padding(8.dp),
+            modifier = Modifier
+                .fillMaxWidth(0.6f)
+                .padding(8.dp),
             onClick = { goTo("summary") }
         ) {
             Text("Summary", fontSize = 22.sp)
@@ -127,7 +136,9 @@ fun StartScreen(goTo: (String) -> Unit) {
 @Composable
 fun GameScreen(game: GameViewModel, goBack: () -> Unit) {
     Column(
-        modifier = Modifier.fillMaxSize().padding(24.dp),
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(24.dp),
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
@@ -144,22 +155,30 @@ fun GameScreen(game: GameViewModel, goBack: () -> Unit) {
         }
     }
 }
+
 // ============================================================== GAMEPLAY =======================================================================================
 @Composable
 fun PickDifficulty(game: GameViewModel) { // pick how hard/how many numbers you want in your guessing game
     var length by rememberSaveable { mutableIntStateOf(5) }
 
-    Text("Pick the length of the sequence.",
-        fontSize = 24.sp)
-    Text("1-10 digits long",
-        Modifier.padding(bottom = 32.dp))
+    Text(
+        "Pick the length of the sequence.",
+        fontSize = 24.sp
+    )
+    Text(
+        "1-10 digits long",
+        Modifier.padding(bottom = 32.dp)
+    )
 
     Row(verticalAlignment = Alignment.CenterVertically) {
         Button(onClick = { if (length > 1) length-- }) { Text("-", fontSize = 18.sp) }
         Text("$length", fontSize = 48.sp, modifier = Modifier.padding(horizontal = 18.dp))
         Button(onClick = { if (length < 10) length++ }) { Text("+", fontSize = 18.sp) }
     }
-    Button(onClick = { game.gameStart(length) }, modifier = Modifier.padding(top = 16.dp)) { Text("Start") }
+    Button(
+        onClick = { game.gameStart(length) },
+        modifier = Modifier.padding(top = 16.dp)
+    ) { Text("Start") }
 }
 
 @Composable
@@ -187,8 +206,16 @@ fun ResultStage(game: GameViewModel) {
         modifier = Modifier.padding(bottom = 16.dp),
         color = if (lastAttempt.isAnswer) Color(0xFF2E7D32) else Color.Red // same as i did in last assignment just to add a pop of colour
     )
-    Text("Answer: ${lastAttempt.answer}", modifier = Modifier.padding(bottom = 4.dp), fontSize = 24.sp)
-    Text("Your guess was: ${lastAttempt.guess.ifEmpty { "Nothing." }}", fontSize = 24.sp, modifier = Modifier.padding(bottom = 16.dp))
+    Text(
+        "Answer: ${lastAttempt.answer}",
+        modifier = Modifier.padding(bottom = 4.dp),
+        fontSize = 24.sp
+    )
+    Text(
+        "Your guess was: ${lastAttempt.guess.ifEmpty { "Nothing." }}",
+        fontSize = 24.sp,
+        modifier = Modifier.padding(bottom = 16.dp)
+    )
 
     Button(onClick = { game.reset() }) { Text("Play Again") }
 }
@@ -203,16 +230,22 @@ fun LogScreen(game: GameViewModel, goBack: () -> Unit) {
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Log",
+        Text(
+            "Log",
             fontSize = 32.sp,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(top = 32.dp)) // padding top because some phones may have the holepunch camera covering it up
+            modifier = Modifier.padding(top = 32.dp)
+        ) // padding top because some phones may have the holepunch camera covering it up
         // no attempts from the player
         if (attempts.isEmpty()) {
             Text("You have not made any attempts.", modifier = Modifier.padding(16.dp))
         }
         // scrollable list of attempts
-        LazyColumn(modifier = Modifier.weight(2f).fillMaxWidth()) {
+        LazyColumn(
+            modifier = Modifier
+                .weight(2f)
+                .fillMaxWidth()
+        ) {
             items(attempts) { attempt ->
                 AttemptRow(attempt, timeFormat)
             }
@@ -221,16 +254,23 @@ fun LogScreen(game: GameViewModel, goBack: () -> Unit) {
         Button(onClick = goBack) { Text("Back") }
     }
 }
+
 // shareable format for each entry in the log
 @Composable
 fun AttemptRow(attempt: Attempts, timeFormat: SimpleDateFormat) {
-    Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(8.dp)
+    ) {
         Text("${attempt.length} digit(s)")
         Text("Answer: ${attempt.answer}")
         Text("Guess: ${attempt.guess}")
-        Text(if (attempt.isAnswer) "Correct" else "Incorrect",
+        Text(
+            if (attempt.isAnswer) "Correct" else "Incorrect",
             fontWeight = FontWeight.Bold,
-            color = if (attempt.isAnswer) Color(0xFF2E7D32) else Color.Red) // dark green for better visibitly on light gray background
+            color = if (attempt.isAnswer) Color(0xFF2E7D32) else Color.Red
+        ) // dark green for better visibitly on light gray background
         Text("Time: ${timeFormat.format(attempt.timestamp)}")
     }
     HorizontalDivider() // make each indiviudaul entry more distinct
@@ -245,10 +285,12 @@ fun SummaryScreen(game: GameViewModel, goBack: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Attempt Summary",
+        Text(
+            "Attempt Summary",
             fontSize = 32.sp,
             fontWeight = FontWeight.SemiBold,
-            modifier = Modifier.padding(bottom = 32.dp))
+            modifier = Modifier.padding(bottom = 32.dp)
+        )
         Text("Total attempts: ${game.total()}")
         Text("Correct attempts: ${game.correct()}")
         Text("Accuracy: ${"%.2f".format(percentage)}%") // format to 2 decimal places
