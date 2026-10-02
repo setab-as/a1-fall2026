@@ -39,6 +39,18 @@ import com.example.avnil_rapidrecall.ui.theme.AvnilrapidrecallTheme
 import java.text.SimpleDateFormat
 import java.util.Locale
 
+/**
+ * MainActivity
+ *
+ * Purpose: One GameViewModel is made and pass it to App() which begins the switching between menu, game, log, and summary screens
+ *
+ * Design Rationale: Make one GameViewModel and then passed between all screens to share the same data.
+ * The screens themselves are meant for display only and pass actual interactions to the GameViewModel, they are not allowed
+ * to make any changes to the data in the game on their own.
+ *
+ * Outstanding Issues: All attempt data is lost when exiting the app
+ * but this is allowed as per the assignment instructions.
+ */
 class MainActivity : ComponentActivity() {
     private val game: GameViewModel by viewModels()
 
@@ -49,7 +61,6 @@ class MainActivity : ComponentActivity() {
             AvnilrapidrecallTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    // color = MaterialTheme.colorScheme.background
                     color = Color.LightGray
                 ) {
                     App(game)
@@ -59,31 +70,46 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+/**
+ * Screen
+ *
+ * Purpose: Represent the four screens of the game, which are the start screen, the game screen,
+ * the log screen, and the summary screen.
+ *
+ * Design Rationale: Used enum instead of strings in order to prevent possible typos from stopping
+ * the screen from displaying anything, allows for four distinct screens to be displayed.
+ *
+ * Outstanding Issues: None
+ */
+enum class Screen { Start, Game, Log, Summary }
+
 @Composable
 fun App(game: GameViewModel) {
-    // which screen is showing: "start", "game", "log", or "summary"
-    var screen by rememberSaveable { mutableStateOf("start") }
+    // which screen is showing, kept after rotating screen
+    // "Saveable" (suggested by Claude, Anthropic AI assistant, "keeping state through rotation", 2026-10-02)
+    var screen by rememberSaveable { mutableStateOf(Screen.Start) }
 
     // leaving any screen resets the game so no timer is left running
     val goHome = {
         game.reset()
-        screen = "start"
+        screen = Screen.Start
     }
 
-    // phone back button goes to the start screen instead of closing the app
-    BackHandler(enabled = screen != "start") { goHome() }
+    // the back button will go to the start screen instead of closing the whole app
+    // (suggested by Claude, Anthropic AI assistant, "navigation between screens", 2026-09-29)
+    BackHandler(enabled = screen != Screen.Start) { goHome() }
 
     when (screen) {
-        "start" -> StartScreen(goTo = { screen = it })
-        "game" -> GameScreen(game, goBack = goHome)
-        "log" -> LogScreen(game, goBack = goHome)
-        "summary" -> SummaryScreen(game, goBack = goHome)
+        Screen.Start -> StartScreen(goTo = { screen = it })
+        Screen.Game -> GameScreen(game, goBack = goHome)
+        Screen.Log -> LogScreen(game, goBack = goHome)
+        Screen.Summary -> SummaryScreen(game, goBack = goHome)
     }
 }
 
 // ============================================================== START SCREEN =======================================================================================
 @Composable
-fun StartScreen(goTo: (String) -> Unit) {
+fun StartScreen(goTo: (Screen) -> Unit) {
     Column(
         modifier = Modifier.fillMaxSize(),
         verticalArrangement = Arrangement.Center,
@@ -102,7 +128,7 @@ fun StartScreen(goTo: (String) -> Unit) {
             modifier = Modifier
                 .fillMaxWidth(0.6f)
                 .padding(8.dp),
-            onClick = { goTo("game") }
+            onClick = { goTo(Screen.Game) }
         ) {
             Text("Start", fontSize = 22.sp)
         }
@@ -110,7 +136,7 @@ fun StartScreen(goTo: (String) -> Unit) {
             modifier = Modifier
                 .fillMaxWidth(0.6f)
                 .padding(8.dp),
-            onClick = { goTo("log") }
+            onClick = { goTo(Screen.Log) }
         ) {
             Text("Log", fontSize = 22.sp)
         }
@@ -118,13 +144,14 @@ fun StartScreen(goTo: (String) -> Unit) {
             modifier = Modifier
                 .fillMaxWidth(0.6f)
                 .padding(8.dp),
-            onClick = { goTo("summary") }
+            onClick = { goTo(Screen.Summary) }
         ) {
-            Text("Summary", fontSize = 22.sp)
+            Text("Attempt Summary", fontSize = 22.sp)
         }
     }
 }
 
+// ============================================================== GAMEPLAY =======================================================================================
 @Composable
 fun GameScreen(game: GameViewModel, goBack: () -> Unit) {
     Column(
@@ -143,15 +170,14 @@ fun GameScreen(game: GameViewModel, goBack: () -> Unit) {
         }
         // dont want back button bobbing up and down while the numbers are showing on the screen
         if (game.state != GameState.Show) {
-            Button(onClick = goBack) { Text("Back") } // draw back for every stage in start screen except for show
+            Button(onClick = goBack) { Text("Back") } // draw back for every stage in gane screen except for show
         }
     }
 }
 
-// ============================================================== GAMEPLAY =======================================================================================
 @Composable
 fun PickDifficulty(game: GameViewModel) { // pick how hard/how many numbers you want in your guessing game
-    var length by rememberSaveable { mutableIntStateOf(5) }
+    var length by remember { mutableIntStateOf(5) } // just start in middlest of the range
 
     Text(
         "Pick the length of the sequence.",
@@ -187,6 +213,9 @@ fun InputStage(game: GameViewModel) {
     Button(onClick = { game.submit() }) { Text("Submit") }
 }
 
+// how a guess is shown on screen, an empty guess is shown as N/A
+fun guessText(guess: String) = guess.ifEmpty { "N/A" }
+
 @Composable
 fun ResultStage(game: GameViewModel) {
     val lastAttempt = game.lastAttempt ?: return
@@ -204,7 +233,7 @@ fun ResultStage(game: GameViewModel) {
         fontSize = 24.sp
     )
     Text(
-        "Your guess was: ${lastAttempt.guess.ifEmpty { "Nothing." }}",
+        "Your guess was: ${guessText(lastAttempt.guess)}",
         fontSize = 24.sp,
         modifier = Modifier.padding(bottom = 16.dp)
     )
@@ -257,7 +286,7 @@ fun AttemptRow(attempt: Attempts, timeFormat: SimpleDateFormat) {
     ) {
         Text("${attempt.length} digit(s)")
         Text("Answer: ${attempt.answer}")
-        Text("Guess: ${attempt.guess}")
+        Text("Guess: ${guessText(attempt.guess)}")
         Text(
             if (attempt.isAnswer) "Correct" else "Incorrect",
             fontWeight = FontWeight.Bold,
@@ -290,6 +319,7 @@ fun SummaryScreen(game: GameViewModel, goBack: () -> Unit) {
     }
 }
 
+// =================================================================== PREVIEW ========================================================================================
 @Preview(showBackground = true)
 @Composable
 fun GreetingPreview() {
