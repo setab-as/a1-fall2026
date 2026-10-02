@@ -1,5 +1,6 @@
 package com.example.avnil_rapidrecall
 
+import android.R.attr.font
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.BackHandler
@@ -32,8 +33,12 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import kotlin.getValue
 import androidx.compose.foundation.layout.Row
-
-
+import androidx.compose.foundation.lazy.LazyColumn
+import java.text.SimpleDateFormat
+import java.util.Locale
+import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.ui.graphics.Color
 class MainActivity : ComponentActivity() {
 
     private val game: GameViewModel by viewModels()
@@ -124,7 +129,6 @@ fun GameScreen(game: GameViewModel, goBack: () -> Unit) {
     }
 }
 
-
 @Composable
 fun PickDifficulty(game: GameViewModel) { // pick how hard/how many numbers you want in your guessing game
     var length by rememberSaveable { mutableIntStateOf(4) }
@@ -140,17 +144,42 @@ fun PickDifficulty(game: GameViewModel) { // pick how hard/how many numbers you 
     Button(onClick = { game.gameStart(length) }) { Text("Start") }
 }
 
+// =====================================================================================================================================================
 // placeholder, list of attempts goes here later
 @Composable
 fun LogScreen(game: GameViewModel, goBack: () -> Unit) {
+    val attempts = game.getAttempts()
+    val timeFormat = remember { SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault()) }
     Column(
         modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Text("Log", fontSize = 32.sp)
+        // no attempts from the player
+        if (attempts.isEmpty()) {
+            Text("You have not made any attempts.", modifier = Modifier.padding(16.dp))
+        }
+        // scrollable list of attempts
+        LazyColumn(modifier = Modifier.fillMaxWidth()) {
+            items(attempts) { attempt ->
+                AttemptRow(attempt, timeFormat)
+            }
+        }
+
         Button(onClick = goBack) { Text("Back") }
     }
+}
+// shareable format for each entry in the log
+@Composable
+fun AttemptRow(attempt: Attempts, timeFormat: SimpleDateFormat) {
+    Column(modifier = Modifier.fillMaxWidth().padding(8.dp)) {
+        Text("${attempt.length} digits")
+        Text("Answer: ${attempt.answer}")
+        Text("Guess: ${attempt.guess}")
+        Text(if (attempt.isAnswer) "Correct" else "Incorrect", fontWeight = FontWeight.Bold, color = if (attempt.isAnswer) Color.Green else Color.Red) // used from assignment 0 ;)
+        Text("Timestamp: ${timeFormat.format(attempt.timestamp)}")
+    }
+    HorizontalDivider() // make each indiviudaul entry more distinct
 }
 
 // placeholder, stats go here later
