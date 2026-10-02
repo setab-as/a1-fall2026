@@ -1,6 +1,8 @@
 package com.example.avnil_rapidrecall
 
+import android.R.attr.bottom
 import android.R.attr.font
+import android.R.attr.onClick
 import android.R.attr.text
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -56,7 +58,8 @@ class MainActivity : ComponentActivity() {
             AvnilrapidrecallTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
+                    // color = MaterialTheme.colorScheme.background
+                    color = Color.LightGray
                 ) {
                     App(game)
                 }
@@ -95,8 +98,11 @@ fun StartScreen(goTo: (String) -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("RapidRecall", fontSize = 40.sp, fontWeight = FontWeight.Bold)
-
+        Text("RapidRecall",
+            fontSize = 42.sp,
+            fontWeight = FontWeight.SemiBold)
+        Text("Memory Game App",
+            modifier = Modifier.padding(bottom = 32.dp),)
         Button(
             modifier = Modifier.fillMaxWidth(0.6f).padding(8.dp),
             onClick = { goTo("game") }
@@ -132,23 +138,28 @@ fun GameScreen(game: GameViewModel, goBack: () -> Unit) {
             GameState.Input -> InputStage(game)
             GameState.Result -> ResultStage(game)
         }
-        Button(onClick = goBack) { Text("Back", fontSize = 24.sp) }
+        // dont want back button bobbing up and down while the numbers are showing on the screen
+        if (game.state != GameState.Show) {
+            Button(onClick = goBack) { Text("Back") } // draw back for every stage in start screen except for show
+        }
     }
 }
 // ============================================================== GAMEPLAY =======================================================================================
 @Composable
 fun PickDifficulty(game: GameViewModel) { // pick how hard/how many numbers you want in your guessing game
-    var length by rememberSaveable { mutableIntStateOf(4) }
+    var length by rememberSaveable { mutableIntStateOf(5) }
 
-    Text("How many digits?", fontSize = 24.sp, modifier = Modifier.padding(bottom = 32.dp))
+    Text("Pick the length of the sequence.",
+        fontSize = 24.sp)
+    Text("1-10 digits long",
+        Modifier.padding(bottom = 32.dp))
 
     Row(verticalAlignment = Alignment.CenterVertically) {
-        Button(onClick = { if (length > 1) length-- }) { Text("-") }
+        Button(onClick = { if (length > 1) length-- }) { Text("-", fontSize = 18.sp) }
         Text("$length", fontSize = 48.sp, modifier = Modifier.padding(horizontal = 18.dp))
-        Button(onClick = { if (length < 10) length++ }) { Text("+") }
+        Button(onClick = { if (length < 10) length++ }) { Text("+", fontSize = 18.sp) }
     }
-
-    Button(onClick = { game.gameStart(length) }) { Text("Start", fontSize = 24.sp) }
+    Button(onClick = { game.gameStart(length) }, modifier = Modifier.padding(top = 16.dp)) { Text("Start") }
 }
 
 @Composable
@@ -162,7 +173,7 @@ fun InputStage(game: GameViewModel) {
         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
         modifier = Modifier.padding(16.dp)
     )
-    Button(onClick = { game.submit() }) { Text("Submit", fontSize = 24.sp) }
+    Button(onClick = { game.submit() }) { Text("Submit") }
 }
 
 @Composable
@@ -173,12 +184,13 @@ fun ResultStage(game: GameViewModel) {
         if (lastAttempt.isAnswer) "Correct" else "Incorrect",
         fontSize = 36.sp,
         fontWeight = FontWeight.Bold,
-        color = if (lastAttempt.isAnswer) Color.Green else Color.Red // same as i did in last assignment just to add a pop of colour
+        modifier = Modifier.padding(bottom = 16.dp),
+        color = if (lastAttempt.isAnswer) Color(0xFF2E7D32) else Color.Red // same as i did in last assignment just to add a pop of colour
     )
     Text("Answer: ${lastAttempt.answer}", modifier = Modifier.padding(bottom = 4.dp), fontSize = 24.sp)
     Text("Your guess was: ${lastAttempt.guess.ifEmpty { "Nothing." }}", fontSize = 24.sp, modifier = Modifier.padding(bottom = 16.dp))
 
-    Button(onClick = { game.reset() }) { Text("Play Again", fontSize = 24.sp) }
+    Button(onClick = { game.reset() }) { Text("Play Again") }
 }
 
 
@@ -191,13 +203,16 @@ fun LogScreen(game: GameViewModel, goBack: () -> Unit) {
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Log", fontSize = 32.sp)
+        Text("Log",
+            fontSize = 32.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(top = 32.dp)) // padding top because some phones may have the holepunch camera covering it up
         // no attempts from the player
         if (attempts.isEmpty()) {
             Text("You have not made any attempts.", modifier = Modifier.padding(16.dp))
         }
         // scrollable list of attempts
-        LazyColumn(modifier = Modifier.fillMaxWidth()) {
+        LazyColumn(modifier = Modifier.weight(2f).fillMaxWidth()) {
             items(attempts) { attempt ->
                 AttemptRow(attempt, timeFormat)
             }
@@ -213,7 +228,9 @@ fun AttemptRow(attempt: Attempts, timeFormat: SimpleDateFormat) {
         Text("${attempt.length} digit(s)")
         Text("Answer: ${attempt.answer}")
         Text("Guess: ${attempt.guess}")
-        Text(if (attempt.isAnswer) "Correct" else "Incorrect", fontWeight = FontWeight.Bold, color = if (attempt.isAnswer) Color.Green else Color.Red) // used from assignment 0 ;)
+        Text(if (attempt.isAnswer) "Correct" else "Incorrect",
+            fontWeight = FontWeight.Bold,
+            color = if (attempt.isAnswer) Color(0xFF2E7D32) else Color.Red) // dark green for better visibitly on light gray background
         Text("Time: ${timeFormat.format(attempt.timestamp)}")
     }
     HorizontalDivider() // make each indiviudaul entry more distinct
@@ -228,11 +245,14 @@ fun SummaryScreen(game: GameViewModel, goBack: () -> Unit) {
         verticalArrangement = Arrangement.Center,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        Text("Attempt Summary", fontSize = 32.sp)
+        Text("Attempt Summary",
+            fontSize = 32.sp,
+            fontWeight = FontWeight.SemiBold,
+            modifier = Modifier.padding(bottom = 32.dp))
         Text("Total attempts: ${game.total()}")
         Text("Correct attempts: ${game.correct()}")
-        Text("Accuracy: $percentage%")
-        Button(onClick = goBack) { Text("Back") }
+        Text("Accuracy: ${"%.2f".format(percentage)}%") // format to 2 decimal places
+        Button(onClick = goBack, modifier = Modifier.padding(top = 16.dp)) { Text("Back") }
     }
 }
 
